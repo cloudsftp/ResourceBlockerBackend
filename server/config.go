@@ -12,11 +12,11 @@ type Resource struct {
 }
 
 type Config struct {
-	Port      int        `json:"port"`
-	Resources []Resource `json:"resources"`
+	Port      int                 `json:"port"`
+	Resources map[string]Resource `json:"resources"`
 }
 
-func GetConfig(configFilePath string) Config {
+func GetConfig(configFilePath string) *Config {
 	configFile, err := os.Open(configFilePath)
 	if err != nil {
 		panic(err)
@@ -30,5 +30,5 @@ func GetConfig(configFilePath string) Config {
 		panic(err)
 	}
 
-	return *config
+	return config
 }
