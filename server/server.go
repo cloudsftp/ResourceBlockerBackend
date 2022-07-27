@@ -14,16 +14,55 @@ type Server struct {
 	config *Config
 }
 
+func internalServerError(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte("internal server error"))
+}
+
+func notFound(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte("not found"))
+}
+
 func (server *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(server.config)
+	jsonBytes, err := json.Marshal(server.config)
+	if err != nil {
+		internalServerError(w)
+		log.Print(err)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
 }
 
 func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	name := vars["name"]
+	name, ok := vars["name"]
+	if !ok {
+		internalServerError(w)
+		log.Printf("Route resourceHandler wrong configured, vars: %v", vars)
+		return
+	}
 
-	resource := server.config.Resources[name]
-	json.NewEncoder(w).Encode(resource)
+	resource, ok := server.config.Resources[name]
+	if !ok {
+		notFound(w)
+		log.Printf("resource %s not found", name)
+		return
+	}
+
+	jsonBytes, err := json.Marshal(resource)
+	if err != nil {
+		internalServerError(w)
+		log.Print(err)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
 }
 
 func StartServer(config *Config) {

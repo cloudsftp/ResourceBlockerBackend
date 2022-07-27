@@ -8,7 +8,7 @@ go run main/main.go
 
 ### Config
 
-Copy `config.example.json`
+Copy `config.example.json` to `config.json`.
 
 ### For Developers
 
