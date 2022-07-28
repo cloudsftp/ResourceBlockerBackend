@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cloudsftp/ResourceBlockerBackend/resource"
 	"github.com/gorilla/mux"
 )
 
@@ -14,14 +15,35 @@ type Server struct {
 	config *Config
 }
 
-func internalServerError(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte("internal server error"))
+type AddRequest struct {
+	Add int `json:"add"`
 }
 
-func notFound(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte("not found"))
+var status = map[string]*resource.ResourceStatus{}
+
+func StartServer(config *Config) {
+	r := mux.NewRouter()
+	r.StrictSlash(true)
+
+	server := &Server{config}
+
+	for id, res := range config.Resources {
+		status[id] = resource.NewStatus(res)
+	}
+
+	r.HandleFunc("/", server.homeHandler).Methods("GET")
+	r.HandleFunc("/{name}/", server.resourceHandler).Methods("GET", "POST")
+
+	log.Printf("Running server on port %d\n", config.Port)
+	srv := &http.Server{
+		Handler: r,
+		Addr:    fmt.Sprintf("127.0.0.1:%d", config.Port),
+		// Good practice: enforce timeouts for servers you create!
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+	log.Fatal(srv.ListenAndServe())
+	// log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), mux))
 }
 
 func (server *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -46,14 +68,20 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resource, ok := server.config.Resources[name]
+	resStatus, ok := status[name]
 	if !ok {
 		notFound(w)
 		log.Printf("resource %s not found", name)
 		return
 	}
 
-	jsonBytes, err := json.Marshal(resource)
+	if r.Method == "POST" {
+		var addRequest AddRequest
+		json.NewDecoder(r.Body).Decode(&addRequest)
+		resStatus.Num += addRequest.Add
+	}
+
+	jsonBytes, err := json.Marshal(resStatus)
 	if err != nil {
 		internalServerError(w)
 		log.Print(err)
@@ -65,23 +93,12 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBytes)
 }
 
-func StartServer(config *Config) {
-	r := mux.NewRouter()
-	r.StrictSlash(true)
+func internalServerError(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte("internal server error"))
+}
 
-	server := &Server{config}
-
-	r.HandleFunc("/", server.homeHandler).Methods("GET")
-	r.HandleFunc("/{name}/", server.resourceHandler).Methods("GET", "POST")
-
-	fmt.Printf("Running server on port %d\n", config.Port)
-	srv := &http.Server{
-		Handler: r,
-		Addr:    fmt.Sprintf("127.0.0.1:%d", config.Port),
-		// Good practice: enforce timeouts for servers you create!
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-	}
-	log.Fatal(srv.ListenAndServe())
-	// log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), mux))
+func notFound(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte("not found"))
 }
