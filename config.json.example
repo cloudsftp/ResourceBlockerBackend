@@ -1,9 +1,0 @@
-{
-    "resources": [
-        {
-            "name": "Fahrradbox",
-            "min": 0,
-            "max": 3
-        }
-    ]
-}

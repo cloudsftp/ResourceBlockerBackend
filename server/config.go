@@ -3,20 +3,16 @@ package server
 import (
 	"encoding/json"
 	"os"
+
+	"github.com/cloudsftp/ResourceBlockerBackend/resource"
 )
 
-type Resource struct {
-	Name string `json:"name"`
-	Min  int    `json:"min"`
-	Max  int    `json:"max"`
-}
-
 type Config struct {
-	Port      int        `json:"port"`
-	Resources []Resource `json:"resources"`
+	Port      int                          `json:"port"`
+	Resources map[string]resource.Resource `json:"resources"`
 }
 
-func GetConfig(configFilePath string) Config {
+func GetConfig(configFilePath string) *Config {
 	configFile, err := os.Open(configFilePath)
 	if err != nil {
 		panic(err)
@@ -30,5 +26,5 @@ func GetConfig(configFilePath string) Config {
 		panic(err)
 	}
 
-	return *config
+	return config
 }
