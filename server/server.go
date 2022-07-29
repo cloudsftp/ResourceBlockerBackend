@@ -64,27 +64,28 @@ func (server *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	name, ok := vars["name"]
+	id, ok := vars["name"]
 	if !ok {
 		internalServerError(w)
 		log.Printf("Route resourceHandler wrong configured, vars: %v", vars)
 		return
 	}
 
-	resStatus, ok := status[name]
+	status, ok := status[id]
 	if !ok {
 		notFound(w)
-		log.Printf("resource %s not found", name)
+		log.Printf("resource %s not found", id)
 		return
 	}
 
 	if r.Method == "POST" {
 		var addRequest AddRequest
 		json.NewDecoder(r.Body).Decode(&addRequest)
-		resStatus.Num += addRequest.Add
+		status.Num += addRequest.Add
+		persist.UpdateStatus(id, status)
 	}
 
-	jsonBytes, err := json.Marshal(resStatus)
+	jsonBytes, err := json.Marshal(status)
 	if err != nil {
 		internalServerError(w)
 		log.Print(err)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloudsftp/ResourceBlockerBackend/dir"
 
-	badger "github.com/dgraph-io/badger/v3"
+	badger "github.com/dgraph-io/badger"
 )
 
 var (
