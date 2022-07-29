@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/cloudsftp/ResourceBlockerBackend/persist"
@@ -19,8 +20,14 @@ type UpdateStatusRequest struct {
 	Delta int `json:"add"`
 }
 
+var resourceLocks = map[string]*sync.Mutex{}
+
 func StartServer(config *Config) {
 	persist.InitializeDatabase()
+
+	for id := range config.Resources {
+		resourceLocks[id] = &sync.Mutex{}
+	}
 
 	r := mux.NewRouter()
 	r.StrictSlash(true)
@@ -64,6 +71,8 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resourceLocks[id].Lock()
+	defer resourceLocks[id].Unlock()
 	status, err := persist.GetStatus(id) // Fix atomicity issue
 	if err != nil {
 		notFound(w)
@@ -87,12 +96,12 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 			num > resource.Max {
 
 			internalServerError(w)
-			log.Printf("num %d out of range for resource with id %s (%v)", num, id, resource)
+			log.Printf("num %d out of range for resource with id %s %v", num, id, resource)
 			return
 		}
 
 		status.Num += req.Delta
-		persist.UpdateStatus(id, status) // Not atomic!!!
+		persist.UpdateStatus(id, status)
 	}
 
 	jsonBytes, err := json.Marshal(status)
