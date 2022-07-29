@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloudsftp/ResourceBlockerBackend/resource"
+	"github.com/cloudsftp/ResourceBlockerBackend/persist"
 	"github.com/gorilla/mux"
 )
 
@@ -15,21 +15,17 @@ type Server struct {
 	config *Config
 }
 
-type AddRequest struct {
-	Add int `json:"add"`
+type UpdateStatusRequest struct {
+	Delta int `json:"add"`
 }
 
-var status = map[string]*resource.ResourceStatus{}
-
 func StartServer(config *Config) {
+	persist.InitializeDatabase()
+
 	r := mux.NewRouter()
 	r.StrictSlash(true)
 
 	server := &Server{config}
-
-	for id, res := range config.Resources {
-		status[id] = resource.NewStatus(res)
-	}
 
 	r.HandleFunc("/", server.homeHandler).Methods("GET")
 	r.HandleFunc("/{name}/", server.resourceHandler).Methods("GET", "POST")
@@ -61,27 +57,28 @@ func (server *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	name, ok := vars["name"]
+	id, ok := vars["name"]
 	if !ok {
 		internalServerError(w)
 		log.Printf("Route resourceHandler wrong configured, vars: %v", vars)
 		return
 	}
 
-	resStatus, ok := status[name]
-	if !ok {
+	status, err := persist.GetStatus(id)
+	if err != nil {
 		notFound(w)
-		log.Printf("resource %s not found", name)
+		log.Printf("resource %s not found", id)
 		return
 	}
 
 	if r.Method == "POST" {
-		var addRequest AddRequest
-		json.NewDecoder(r.Body).Decode(&addRequest)
-		resStatus.Num += addRequest.Add
+		var req UpdateStatusRequest
+		json.NewDecoder(r.Body).Decode(&req)
+		status.Num += req.Delta
+		persist.UpdateStatus(id, status)
 	}
 
-	jsonBytes, err := json.Marshal(resStatus)
+	jsonBytes, err := json.Marshal(status)
 	if err != nil {
 		internalServerError(w)
 		log.Print(err)
