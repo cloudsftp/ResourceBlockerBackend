@@ -50,6 +50,7 @@ func StartServer(config *Config) {
 }
 
 func (server *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
 	jsonBytes, err := json.Marshal(server.config)
 	if err != nil {
 		internalServerError(w)
@@ -57,12 +58,12 @@ func (server *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonBytes)
 }
 
 func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
 	vars := mux.Vars(r)
 	id, ok := vars["name"]
 	if !ok {
@@ -71,9 +72,16 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resourceLocks[id].Lock()
-	defer resourceLocks[id].Unlock()
-	status, err := persist.GetStatus(id) // Fix atomicity issue
+	lock, ok := resourceLocks[id]
+	if !ok {
+		notFound(w)
+		log.Printf("lock for resource %s not found", id)
+		return
+	}
+	lock.Lock()
+	defer lock.Unlock()
+
+	status, err := persist.GetStatus(id)
 	if err != nil {
 		notFound(w)
 		log.Printf("resource %s not found", id)
@@ -111,17 +119,16 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonBytes)
 }
 
 func internalServerError(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte("internal server error"))
+	w.Write([]byte("{\"error\": \"internal\"}"))
 }
 
 func notFound(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte("not found"))
+	w.Write([]byte("{\"error\": \"not found\"}"))
 }
