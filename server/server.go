@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cloudsftp/ResourceBlockerBackend/persist"
-	"github.com/cloudsftp/ResourceBlockerBackend/resource"
 	"github.com/gorilla/mux"
 )
 
@@ -16,11 +15,9 @@ type Server struct {
 	config *Config
 }
 
-type AddRequest struct {
-	Add int `json:"add"`
+type UpdateStatusRequest struct {
+	Delta int `json:"add"`
 }
-
-var status = map[string]*resource.ResourceStatus{}
 
 func StartServer(config *Config) {
 	persist.InitializeDatabase()
@@ -29,10 +26,6 @@ func StartServer(config *Config) {
 	r.StrictSlash(true)
 
 	server := &Server{config}
-
-	for id, res := range config.Resources {
-		status[id] = resource.NewStatus(res)
-	}
 
 	r.HandleFunc("/", server.homeHandler).Methods("GET")
 	r.HandleFunc("/{name}/", server.resourceHandler).Methods("GET", "POST")
@@ -71,17 +64,17 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, ok := status[id]
-	if !ok {
+	status, err := persist.GetStatus(id)
+	if err != nil {
 		notFound(w)
 		log.Printf("resource %s not found", id)
 		return
 	}
 
 	if r.Method == "POST" {
-		var addRequest AddRequest
-		json.NewDecoder(r.Body).Decode(&addRequest)
-		status.Num += addRequest.Add
+		var req UpdateStatusRequest
+		json.NewDecoder(r.Body).Decode(&req)
+		status.Num += req.Delta
 		persist.UpdateStatus(id, status)
 	}
 
