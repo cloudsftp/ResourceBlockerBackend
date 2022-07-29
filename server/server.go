@@ -64,7 +64,7 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, err := persist.GetStatus(id)
+	status, err := persist.GetStatus(id) // Fix atomicity issue
 	if err != nil {
 		notFound(w)
 		log.Printf("resource %s not found", id)
@@ -74,8 +74,25 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		var req UpdateStatusRequest
 		json.NewDecoder(r.Body).Decode(&req)
+		num := status.Num + req.Delta
+
+		resource, ok := server.config.Resources[id]
+		if !ok {
+			internalServerError(w)
+			log.Printf("resource with id %s not found", id)
+			return
+		}
+
+		if num < resource.Min ||
+			num > resource.Max {
+
+			internalServerError(w)
+			log.Printf("num %d out of range for resource with id %s (%v)", num, id, resource)
+			return
+		}
+
 		status.Num += req.Delta
-		persist.UpdateStatus(id, status)
+		persist.UpdateStatus(id, status) // Not atomic!!!
 	}
 
 	jsonBytes, err := json.Marshal(status)
