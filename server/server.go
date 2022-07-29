@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cloudsftp/ResourceBlockerBackend/persist"
 	"github.com/cloudsftp/ResourceBlockerBackend/resource"
 	"github.com/gorilla/mux"
 )
@@ -22,6 +23,8 @@ type AddRequest struct {
 var status = map[string]*resource.ResourceStatus{}
 
 func StartServer(config *Config) {
+	persist.InitializeDatabase()
+
 	r := mux.NewRouter()
 	r.StrictSlash(true)
 
