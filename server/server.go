@@ -37,9 +37,9 @@ var resourceLocks = map[string]*sync.Mutex{}
 func StartServer(config *Config) {
 	persist.InitializeDatabase()
 
-	for id := range config.Resources {
+	for id, res := range config.Resources {
 		resourceLocks[id] = &sync.Mutex{}
-		persist.InitializeStatusIfNotExists(id)
+		persist.InitializeStatusIfNotExists(id, res)
 	}
 
 	r := mux.NewRouter()

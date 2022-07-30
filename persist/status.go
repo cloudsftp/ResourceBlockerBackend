@@ -38,10 +38,10 @@ func GetStatus(id string) (*resource.ResourceStatus, error) {
 	return status, err
 }
 
-func InitializeStatusIfNotExists(id string) {
+func InitializeStatusIfNotExists(id string, res *resource.Resource) {
 	_, err := GetStatus(id)
 	if err != nil {
-		status := resource.NewStatus()
+		status := resource.NewStatus(res)
 		UpdateStatus(id, status)
 	}
 }

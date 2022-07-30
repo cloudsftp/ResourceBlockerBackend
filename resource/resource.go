@@ -7,11 +7,13 @@ type Resource struct {
 }
 
 type ResourceStatus struct {
-	Num int `json:"num"`
+	Name string `json:"name"`
+	Num  int    `json:"num"`
 }
 
-func NewStatus() *ResourceStatus {
+func NewStatus(res *Resource) *ResourceStatus {
 	return &ResourceStatus{
-		Num: 0,
+		Name: res.Name,
+		Num:  0,
 	}
 }

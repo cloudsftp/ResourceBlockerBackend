@@ -72,6 +72,7 @@ For example:
 
 ```
 {
+    "name": "Test Resource",
     "num": 1
 }
 ```
