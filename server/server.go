@@ -17,7 +17,7 @@ type Server struct {
 }
 
 type UpdateStatusRequest struct {
-	Delta int `json:"add"`
+	Delta int `json:"delta"`
 }
 
 var resourceLocks = map[string]*sync.Mutex{}
