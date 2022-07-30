@@ -1,0 +1,10 @@
+{
+    "port": 5000,
+    "resources": {
+        "test": {
+            "name": "Test Resource",
+            "min": 0,
+            "max": 3
+        }
+    }
+}
