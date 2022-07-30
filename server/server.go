@@ -25,7 +25,6 @@ func newResourceResponse(config *Config) *resourcesResponse {
 	for id := range config.Resources {
 		ids = append(ids, id)
 	}
-	return &resourcesResponse{ResourceIds: ids}
 }
 
 type updateStatusRequest struct {
