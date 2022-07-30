@@ -16,8 +16,20 @@ type Server struct {
 	config *Config
 }
 
-type UpdateStatusRequest struct {
-	Delta int `json:"add"`
+type resourcesResponse struct {
+	ResourceIds []string `json:"resources"`
+}
+
+func newResourceResponse(config *Config) *resourcesResponse {
+	ids := []string{}
+	for id := range config.Resources {
+		ids = append(ids, id)
+	}
+	return &resourcesResponse{ResourceIds: ids}
+}
+
+type updateStatusRequest struct {
+	Delta int `json:"delta"`
 }
 
 var resourceLocks = map[string]*sync.Mutex{}
@@ -46,12 +58,13 @@ func StartServer(config *Config) {
 		ReadTimeout:  15 * time.Second,
 	}
 	log.Fatal(srv.ListenAndServe())
-	// log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), mux))
 }
 
 func (server *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
-	jsonBytes, err := json.Marshal(server.config)
+
+	response := newResourceResponse(server.config)
+	jsonBytes, err := json.Marshal(response)
 	if err != nil {
 		internalServerError(w)
 		log.Print(err)
@@ -89,7 +102,7 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "POST" {
-		var req UpdateStatusRequest
+		var req updateStatusRequest
 		json.NewDecoder(r.Body).Decode(&req)
 		num := status.Num + req.Delta
 
