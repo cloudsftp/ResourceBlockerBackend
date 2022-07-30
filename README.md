@@ -1,4 +1,4 @@
-# Resource Blocker Backend
+# Resource Blocker Backend ![version](https://img.shields.io/badge/v0.1.0--pre-blue.svg)
 
 ## Usage
 
