@@ -1,4 +1,4 @@
-# Resource Blocker Backend ![version](https://img.shields.io/badge/v0.1.0-blue.svg)
+# Resource Blocker Backend ![version](https://img.shields.io/badge/v0.1.1-blue.svg)
 
 [![Build Develop](https://github.com/cloudsftp/ResourceBlockerBackend/actions/workflows/build.yml/badge.svg)](https://github.com/cloudsftp/ResourceBlockerBackend/actions/workflows/build.yml)
 
@@ -11,6 +11,27 @@ go run main/main.go
 ### Config
 
 Copy `config.example.json` to `config.json`.
+The example has the following content:
+
+```
+{
+    "port": 5000,
+    "resources": {
+        "test": {
+            "name": "Test Resource",
+            "min": 0,
+            "max": 3
+        }
+    }
+}
+```
+
+The server will listen on port `5000`.
+
+There is only one resource configured.
+It has the id `test`.
+When requesting the status over the API, use this id.
+It's name is `Test Resource` and it's status has to be in the range between `0` and `3`.
 
 ### For Developers
 
@@ -51,6 +72,7 @@ For example:
 
 ```
 {
+    "name": "Test Resource",
     "num": 1
 }
 ```

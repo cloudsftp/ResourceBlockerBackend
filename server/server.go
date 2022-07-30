@@ -37,8 +37,9 @@ var resourceLocks = map[string]*sync.Mutex{}
 func StartServer(config *Config) {
 	persist.InitializeDatabase()
 
-	for id := range config.Resources {
+	for id, res := range config.Resources {
 		resourceLocks[id] = &sync.Mutex{}
+		persist.InitializeStatusIfNotExists(id, res)
 	}
 
 	r := mux.NewRouter()
@@ -52,7 +53,7 @@ func StartServer(config *Config) {
 	log.Printf("Running server on port %d\n", config.Port)
 	srv := &http.Server{
 		Handler: r,
-		Addr:    fmt.Sprintf("127.0.0.1:%d", config.Port),
+		Addr:    fmt.Sprintf("0.0.0.0:%d", config.Port),
 		// Good practice: enforce timeouts for servers you create!
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,

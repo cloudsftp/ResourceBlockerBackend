@@ -6,7 +6,7 @@ import (
 )
 
 func GetStoreDir(name string) string {
-	prefix := path.Join(os.Getenv("HOME"), ".resbloccker")
+	prefix := path.Join(os.Getenv("HOME"), ".resblocker")
 	err := os.MkdirAll(prefix, os.ModeDir|0700)
 	if err != nil {
 		panic(err) // Should not happen, because $HOME exists always

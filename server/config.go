@@ -8,8 +8,8 @@ import (
 )
 
 type Config struct {
-	Port      int                          `json:"port"`
-	Resources map[string]resource.Resource `json:"resources"`
+	Port      int                           `json:"port"`
+	Resources map[string]*resource.Resource `json:"resources"`
 }
 
 func GetConfig(configFilePath string) *Config {
