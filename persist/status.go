@@ -38,6 +38,14 @@ func GetStatus(id string) (*resource.ResourceStatus, error) {
 	return status, err
 }
 
+func InitializeStatusIfNotExists(id string) {
+	_, err := GetStatus(id)
+	if err != nil {
+		status := resource.NewStatus()
+		UpdateStatus(id, status)
+	}
+}
+
 func statusKey(id string) []byte {
 	return []byte("status_" + id)
 }

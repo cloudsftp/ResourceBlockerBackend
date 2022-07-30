@@ -39,6 +39,7 @@ func StartServer(config *Config) {
 
 	for id := range config.Resources {
 		resourceLocks[id] = &sync.Mutex{}
+		persist.InitializeStatusIfNotExists(id)
 	}
 
 	r := mux.NewRouter()
