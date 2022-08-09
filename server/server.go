@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/cloudsftp/ResourceBlockerBackend/persist"
+	"github.com/cloudsftp/ResourceBlockerBackend/resource"
 	"github.com/gorilla/mux"
 )
 
@@ -17,15 +18,11 @@ type Server struct {
 }
 
 type resourcesResponse struct {
-	ResourceIds []string `json:"resources"`
+	Resources map[string]*resource.Resource `json:"resources"`
 }
 
 func newResourceResponse(config *Config) *resourcesResponse {
-	ids := []string{}
-	for id := range config.Resources {
-		ids = append(ids, id)
-	}
-	return &resourcesResponse{ResourceIds: ids}
+	return &resourcesResponse{config.Resources}
 }
 
 type updateStatusRequest struct {
