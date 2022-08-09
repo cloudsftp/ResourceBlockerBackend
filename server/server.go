@@ -18,11 +18,7 @@ type Server struct {
 }
 
 type resourcesResponse struct {
-	Resources map[string]*resource.Resource `json:"resources"`
-}
-
-func newResourceResponse(config *Config) *resourcesResponse {
-	return &resourcesResponse{config.Resources}
+	Stats map[string]*resource.ResourceStatus `json:"stats"`
 }
 
 type updateStatusRequest struct {
@@ -58,10 +54,31 @@ func StartServer(config *Config) {
 	log.Fatal(srv.ListenAndServe())
 }
 
+func getResourceStatus(id string, w http.ResponseWriter) (*resource.ResourceStatus, error) {
+	status, err := persist.GetStatus(id)
+	if err != nil {
+		notFound(w)
+		log.Printf("resource %s not found", id)
+		return nil, err
+	}
+
+	return status, nil
+}
+
 func (server *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
-	response := newResourceResponse(server.config)
+	stats := map[string]*resource.ResourceStatus{}
+
+	for id, _ := range server.config.Resources {
+		status, err := getResourceStatus(id, w)
+		if err != nil {
+			return
+		}
+		stats[id] = status
+	}
+
+	response := resourcesResponse{Stats: stats}
 	jsonBytes, err := json.Marshal(response)
 	if err != nil {
 		internalServerError(w)
@@ -92,10 +109,8 @@ func (server *Server) resourceHandler(w http.ResponseWriter, r *http.Request) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	status, err := persist.GetStatus(id)
+	status, err := getResourceStatus(id, w)
 	if err != nil {
-		notFound(w)
-		log.Printf("resource %s not found", id)
 		return
 	}
 
