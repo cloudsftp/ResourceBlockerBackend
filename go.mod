@@ -17,4 +17,5 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
