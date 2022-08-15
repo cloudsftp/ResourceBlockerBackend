@@ -1,4 +1,4 @@
-# Resource Blocker Backend ![version](https://img.shields.io/badge/v0.1.1-blue.svg)
+# Resource Blocker Backend ![version](https://img.shields.io/badge/v0.1.2-blue.svg)
 
 [![Build Develop](https://github.com/cloudsftp/ResourceBlockerBackend/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/cloudsftp/ResourceBlockerBackend/actions/workflows/build.yml)
 
