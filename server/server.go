@@ -70,7 +70,7 @@ func (server *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	stats := map[string]*resource.ResourceStatus{}
 
-	for id, _ := range server.config.Resources {
+	for id := range server.config.Resources {
 		status, err := getResourceStatus(id, w)
 		if err != nil {
 			return
